@@ -15,6 +15,14 @@ RESULT="all-tasks.pdf"
 mkdir $OUTDIR
 shopt -s nullglob  # allows for loops to run 0 times if no files match the pattern
 
+if command -v bebras >/dev/null 2>&1
+then
+  BEBRAS=bebras
+else
+  BEBRAS="npx bebras"
+fi
+
+
 # convert individual files
 for dir in 20??-*/
 do
@@ -47,7 +55,7 @@ do
 		for MDNAME in $dir$BEBRAS_ID*.md
 		do
 	    echo converting $MDNAME
-      bebras convert -o "$OUTDIR/${MDNAME##*/}.pdf" pdf "$MDNAME" >/dev/null 2>&1
+      $BEBRAS convert -o "$OUTDIR/${MDNAME##*/}.pdf" pdf "$MDNAME" >/dev/null 2>&1
     done
 
 done
