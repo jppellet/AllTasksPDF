@@ -50,11 +50,53 @@ if [ "$#" -gt 0 ]; then
     usage
 fi
 
+lang_pattern=""
+if [ "$lang" != "all" ]; then
+    lang_pattern="-$lang"
+fi
+
+# Function to handle SIGINT (Ctrl-C)
+handle_sigint() {
+    echo
+    echo "Conversion to PDF interrupted"
+    do_concatenation
+    exit 1
+}
+
+# Trap SIGINT and call the handle_sigint function
+trap handle_sigint SIGINT
+
+# Function to concatenate all produced PDFs into one.
+# Called at the end of the script or when interrupted by SIGINT
+do_concatenation() {
+  shopt -u nullglob # turn off the nullglob option
+
+  # concatenate all pdfs into one
+  if [ -z "$(ls -A "$OUTDIR")" ]; then
+    echo "**WARNING** No ODT or HTML task files found in folder ${PWD##*/} - creating empty PDF"
+    touch "$RESULT"
+  else
+    matched_pdfs=("$OUTDIR"/*.pdf)
+    pdftk "${matched_pdfs[@]}" cat output "$OUTDIR/$RESULT"
+
+    if [ "${#matched_pdfs[@]}" -eq 1 ]; then
+      tasks="task"
+    else
+      tasks="tasks"
+    fi
+    echo "Created $RESULT with "${#matched_pdfs[@]}" $tasks"
+
+    rm -f "$RESULT"
+    mv "$OUTDIR/$RESULT" .
+    rm $OUTDIR/*.pdf
+  fi
+  rmdir "$OUTDIR"
+}
 
 
 # create temporary directory
 OUTDIR="/tmp/out$$"
-RESULT="all-tasks.pdf"
+RESULT="all-tasks$lang_pattern.pdf"
 mkdir $OUTDIR
 shopt -s nullglob  # allows for loops to run 0 times if no files match the pattern
 
@@ -62,11 +104,6 @@ if command -v bebras >/dev/null 2>&1; then
   BEBRAS=bebras
 else
   BEBRAS="npx bebras"
-fi
-
-lang_pattern=""
-if [ "$lang" != "all" ]; then
-    lang_pattern="-$lang"
 fi
 
 
@@ -103,16 +140,5 @@ for dir in 20??-*/; do
     done
 
 done
-shopt -u nullglob # turn off the nullglob option
 
-# concatenate all pdfs into one
-if [ -z "$(ls -A "$OUTDIR")" ]; then
-  echo "**WARNING** No ODT or HTML task files found in folder ${PWD##*/} - creating empty PDF"
-  touch "$RESULT"
-else
-  (cd $OUTDIR; pdftk *.pdf cat output $RESULT)
-  rm -f "$RESULT"
-  mv "$OUTDIR/$RESULT" .
-  rm $OUTDIR/*.pdf
-fi
-rmdir "$OUTDIR"
+do_concatenation
