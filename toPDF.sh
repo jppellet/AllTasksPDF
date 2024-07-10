@@ -9,27 +9,73 @@
 # - bebras       for Markdown files (npm install -g bebras)
 # - pdftk        for concatenating PDF files
 
+usage() {
+    echo "Usage: $0 [-v|--verbose] [-l|--lang <lang_code>|all]"
+    exit 1
+}
+
+lang=all
+verbose=false
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -v|--verbose)
+            verbose=true
+            shift
+            ;;
+        -l|--lang)
+            lang="$2"
+            shift
+            shift
+            ;;
+        --)
+            # stop processing options
+            shift
+            break
+            ;;
+        *)
+            if [[ $1 == -* ]]; then
+                echo "Invalid option: $1"
+                usage
+            else
+                break
+            fi
+            ;;
+    esac
+done
+
+# error if there are any more arguments
+if [ "$#" -gt 0 ]; then
+    echo "Unexpected arguments: $@"
+    usage
+fi
+
+
+
 # create temporary directory
 OUTDIR="/tmp/out$$"
 RESULT="all-tasks.pdf"
 mkdir $OUTDIR
 shopt -s nullglob  # allows for loops to run 0 times if no files match the pattern
 
-if command -v bebras >/dev/null 2>&1
-then
+if command -v bebras >/dev/null 2>&1; then
   BEBRAS=bebras
 else
   BEBRAS="npx bebras"
 fi
 
+lang_pattern=""
+if [ "$lang" != "all" ]; then
+    lang_pattern="-$lang"
+fi
+
 
 # convert individual files
-for dir in 20??-*/
-do
+for dir in 20??-*/; do
     BEBRAS_ID=${dir%%_*}
-    # convert ALL odt files satisfying the correct pattern
-    for ODTNAME in $dir$BEBRAS_ID*.odt
-    do
+
+    # convert .odt files satisfying the correct pattern
+    for ODTNAME in $dir$BEBRAS_ID*$lang_pattern.odt; do
 	    echo converting $ODTNAME
 
       # check if lowriter exists as a command
@@ -44,16 +90,14 @@ do
       fi
 		done
 
-		# convert ALL html files satisfying the correct pattern
-		for HTMLNAME in $dir$BEBRAS_ID*.html
-		do
+		# convert .html files satisfying the correct pattern
+		for HTMLNAME in $dir$BEBRAS_ID*$lang_pattern.html; do
 	    echo converting $HTMLNAME
 	    wkhtmltopdf --enable-local-file-access "$HTMLNAME" "$OUTDIR/${HTMLNAME##*/}.pdf" >/dev/null 2>&1
     done
 
-		# convert ALL md files satisfying the correct pattern
-		for MDNAME in $dir$BEBRAS_ID*.md
-		do
+		# convert .task.md files satisfying the correct pattern
+		for MDNAME in $dir$BEBRAS_ID*$lang_pattern.task.md; do
 	    echo converting $MDNAME
       $BEBRAS convert -o "$OUTDIR/${MDNAME##*/}.pdf" pdf "$MDNAME" >/dev/null 2>&1
     done

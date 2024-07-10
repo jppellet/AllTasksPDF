@@ -9,12 +9,13 @@ cmd_folder=$(dirname $0)
 cmd_folder=$(cd $cmd_folder; pwd) # get absolute path
 
 usage() {
-    echo "Usage: $0 [-f|--force] [<target_folder>]"
+    echo "Usage: $0 [-f|--force] [-v|--verbose] [-l|--lang <lang_code>|all] [<target_folder>]"
     exit 1
 }
 
 force=false
 verbose=false
+lang=all
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -24,6 +25,11 @@ while [[ "$#" -gt 0 ]]; do
             ;;
         -v|--verbose)
             verbose=true
+            shift
+            ;;
+        -l|--lang)
+            lang="$2"
+            shift
             shift
             ;;
         --)
@@ -53,6 +59,7 @@ if [ "$verbose" == "true" ]; then
   echo "  target_folder: '$target_folder'"
   echo "  force: $force"
   echo "  verbose: $verbose"
+  echo "  language: $lang"
 fi
 
 cd "$target_folder"
@@ -64,6 +71,10 @@ do
     echo "${dir}all-tasks.pdf already exists - not created anew"
   else
     echo "Creating ${dir}all-tasks.pdf"
-    (cd $dir; echo "Processing $dir"; "$cmd_folder/toPDF.sh")
+    verbose_opt=""
+    if [ "$verbose" == "true" ]; then
+      verbose_opt="--verbose"
+    fi
+    (cd $dir; echo "Processing $dir"; "$cmd_folder/toPDF.sh" $verbose_opt --lang $lang)
   fi
 done
