@@ -100,11 +100,11 @@ RESULT="all-tasks$lang_pattern.pdf"
 mkdir $OUTDIR
 shopt -s nullglob  # allows for loops to run 0 times if no files match the pattern
 
-if command -v bebras >/dev/null 2>&1; then
-  BEBRAS=bebras
-else
-  BEBRAS="npx bebras"
-fi
+#if command -v bebras >/dev/null 2>&1; then
+#  BEBRAS=bebras
+#else
+  BEBRAS="npx bebras@latest"
+#fi
 
 
 # convert individual files
