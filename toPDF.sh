@@ -106,6 +106,19 @@ shopt -s nullglob  # allows for loops to run 0 times if no files match the patte
   BEBRAS="npx bebras@latest"
 #fi
 
+TERM_GRAY="\033[1;30m"
+TERM_NORMAL="\033[0m"
+
+echo_and_run() {
+  if [ "$verbose" = true ]; then
+    echo "${TERM_GRAY}\$ $*"
+    "$@"
+    echo "${TERM_NORMAL}\c"
+  else
+    "$@" >/dev/null 2>&1
+  fi
+}
+
 
 # convert individual files
 for dir in 20??-*/; do
@@ -118,27 +131,28 @@ for dir in 20??-*/; do
       # check if lowriter exists as a command
       if command -v lowriter >/dev/null 2>&1
       then
-	      lowriter --headless --convert-to pdf --outdir "$OUTDIR" "$ODTNAME" >/dev/null  2>&1
+	      echo_and_run lowriter --headless --convert-to pdf --outdir "$OUTDIR" "$ODTNAME"
       else
         # else, use soffice, according to https://stackoverflow.com/questions/30349542/command-libreoffice-headless-convert-to-pdf-test-docx-outdir-pdf-is-not
-        soffice --headless --convert-to pdf:writer_pdf_Export \
+        echo_and_run soffice --headless --convert-to pdf:writer_pdf_Export \
           "-env:UserInstallation=file:///tmp/LibreOffice_Conversion_${USER}" \
-          --outdir "$OUTDIR" "$ODTNAME" >/dev/null 2>&1
+          --outdir "$OUTDIR" "$ODTNAME"
       fi
 		done
 
 		# convert .html files satisfying the correct pattern
 		for HTMLNAME in $dir$BEBRAS_ID*$lang_pattern.html; do
 	    echo converting $HTMLNAME
-	    wkhtmltopdf --enable-local-file-access "$HTMLNAME" "$OUTDIR/${HTMLNAME##*/}.pdf" >/dev/null 2>&1
+	    echo_and_run wkhtmltopdf --enable-local-file-access "$HTMLNAME" "$OUTDIR/${HTMLNAME##*/}.pdf"
     done
 
 		# convert .task.md files satisfying the correct pattern
 		for MDNAME in $dir$BEBRAS_ID*$lang_pattern.task.md; do
 	    echo converting $MDNAME
-      $BEBRAS convert -o "$OUTDIR/${MDNAME##*/}.pdf" pdf "$MDNAME" >/dev/null 2>&1
+      echo_and_run $BEBRAS convert pdf -o "$OUTDIR/${MDNAME##*/}.pdf" "$MDNAME"
     done
 
 done
 
+echo
 do_concatenation
