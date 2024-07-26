@@ -52,9 +52,11 @@ With Homebrew, install Node, which is a JavaScript execution environment for whi
 
 Node comes with a tool called `npx`, which can be used to run Node-based tools. It will download the dependencies as needed. Try this:
 
-    npx bebras 
+    npx bebras@latest
 
 The first time, it will download the Bebras toolset used for Markdown files and show some info. All following times, it should be much quicker because no download will be needed. This will be used to convert the Markdown files.
+
+(If you use the main script, you don't need to actively know this, but here it is: the `@latest` part is optionnal but ensures that the latest version of the module gets downloaded. If you want to keep the version you may already have, just do `npx bebras` without the `@latest` or use the version number you want, like `npx bebras@0.5.0`.)
 
 Then, install LibreOffice, which will be used to convert the ODT files:
 
