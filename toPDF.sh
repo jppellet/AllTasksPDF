@@ -100,11 +100,16 @@ RESULT="all-tasks$lang_pattern.pdf"
 mkdir $OUTDIR
 shopt -s nullglob  # allows for loops to run 0 times if no files match the pattern
 
-#if command -v bebras >/dev/null 2>&1; then
-#  BEBRAS=bebras
-#else
+if command -v bebras-dev >/dev/null 2>&1; then
+  BEBRAS=bebras-dev
+else
   BEBRAS="npx bebras@latest"
-#fi
+  npx bebras@latest --version
+  if [ $? -ne 0 ]; then
+    echo "Error: bebras command not found. Please install bebras globally with 'npm install -g bebras' or ensure bebras-dev is on your PATH."
+    exit 1
+  fi
+fi
 
 TERM_GRAY="\033[1;30m"
 TERM_NORMAL="\033[0m"
