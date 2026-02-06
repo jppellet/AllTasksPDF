@@ -111,9 +111,9 @@ TERM_NORMAL="\033[0m"
 
 echo_and_run() {
   if [ "$verbose" = true ]; then
-    echo "${TERM_GRAY}\$ $*"
+    echo -e "${TERM_GRAY}\$ $*"
     "$@"
-    echo "${TERM_NORMAL}\c"
+    echo -e "${TERM_NORMAL}\c"
   else
     "$@" >/dev/null 2>&1
   fi
